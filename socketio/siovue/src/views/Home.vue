@@ -2,6 +2,8 @@
   <div class="home">
     <input v-model="message" placeholder="edit me">
     <button @click.prevent="senddata(message)">Send Message</button>
+    <br />
+    <textarea v-model="servermsgs"></textarea>
   </div>
 </template>
 
@@ -14,13 +16,19 @@ export default {
   data() {
     return {
       message: "Hello World!",
-      socket: null
+      socket: null,
+      servermsgs: ""
     }
   },
   created() {
-    this.socket = io.connect("http://10.1.1.113:44444");
+    this.socket = io.connect("http://192.168.1.157:44444");
+    this.socket.on("connectevent", fetcheddata => {
+      //console.log(fetcheddata);
+      this.servermsgs = this.servermsgs + fetcheddata['data'] + ": " + fetcheddata['sid'] + "\n";
+    });
     this.socket.on("message", fetcheddata => {
-      console.log(fetcheddata);
+      //console.log(fetcheddata);
+      this.servermsgs = this.servermsgs + fetcheddata + "\n";
     });
   },
   methods: {
