@@ -1,5 +1,6 @@
 from flask import Flask, make_response, request
 from flask_socketio import SocketIO, emit, send
+from flask_socketio import join_room, leave_room
 
 
 # Initialization
@@ -22,15 +23,26 @@ def test_connect():
 def handle_message(message):
     print(request.values)
     print('received message: ' + message)
-    send('ServerSend: ' + message)
+    send('ServerSend: ' + message, to="testroom")
     emit("message", "ServerEmit: "+message, broadcast=True)
 
-@socketio.on('json', namespace='/living_room')
+
+@socketio.on('join')
+def on_join():
+    room = "testroom"
+    join_room(room)
+    send(request.sid + ' has entered the room.', to=room)
+
+@socketio.on('leave')
+def on_leave(data):
+    room = 'testroom'
+    leave_room(room)
+    send(data['msg'] + ' has left the room.', to=room)
+
+@socketio.on('json', namespace='/my_namespace')
 def text(message):
-    """Sent by a client when the user entered a new message.
-    The message is sent to all people in the room."""
-    room = session.get('room')
-    emit('message', {'msg': session.get('name') + ':' + message['msg']}, room=room)
+    emit('message', "Namespace Message from " + request.sid, broadcast=True)
+    print("namespace json")
 
 @socketio.on('disconnect')
 def handle_disconnect():
